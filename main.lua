@@ -28,6 +28,8 @@ LoveUpdate = Instance.new("Signal")
 LoveDraw = Instance.new("Signal")
 NetworkDataRecieved = Instance.new("Signal")
 NetworkDataSend = Instance.new("Signal")
+local isHosting
+local ip, port
 
 
 ClassUtil.RecurseStart(Utilities, _utilitiesOrder)
@@ -45,13 +47,14 @@ local networkDataToSend do -- the magic man of magic
 		UDP:settimeout(0)
 
 		if askQuestion("Are you hosting? [y/n]"):lower() == "y" then
-			local port = askQuestion("On what port?")
-			UDP:setsockname("*", port)
+			port = tonumber(askQuestion("On what port?"))
+			isHosting = true
+			UDP:setsockname("localhost", port)
 		else
-			local address = askQuestion("What's the ip?")
-			local port = askQuestion("What's the port?")
-			RegularPrint(address, port)
-			UDP:setpeername(address, port)
+			ip = askQuestion("What's the ip?")
+			port = tonumber(askQuestion("What's the port?"))
+			RegularPrint(ip, port)
+			UDP:setpeername(ip, port)
 		end
 	end
 
@@ -67,14 +70,26 @@ love.update = function(dt)
 	LoveUpdate:Fire(dt)
 
 	if networkDataToSend and UDP then
-		local data, msgOrIp, portOrNil = UDP:recievefrom()
-		if data then
-			local dataToSend = getValue(data)
-			for i,v in ipairs(dataToSend) do
-				NetworkDataRecieved:Fire(v.jobName, v.data)
-			end
+		if isHosting then
+			local data, msgOrIp, portOrNil = UDP:recievefrom()
+			if data then
+				local dataToSend = getValue(data)
+				for i,v in ipairs(dataToSend) do
+					NetworkDataRecieved:Fire(v.jobName, v.data)
+				end
 
-			UDP:sendto(getStr(networkDataToSend))
+				UDP:sendto(getStr(networkDataToSend))
+			end
+		else
+			UDP:send(getStr(networkDataToSend))
+
+			local data = UDP:receive()
+				if data then
+				local dataToSend = getValue(data)
+				for i,v in ipairs(dataToSend) do
+					NetworkDataRecieved:Fire(v.jobName, v.data)
+				end
+			end
 		end
 		networkDataToSend = nil
 	end
