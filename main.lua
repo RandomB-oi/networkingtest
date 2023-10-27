@@ -47,12 +47,15 @@ local networkDataToSend do -- the magic man of magic
 		UDP:settimeout(0)
 
 		if askQuestion("Are you hosting? [y/n]"):lower() == "y" then
-			port = tonumber(askQuestion("On what port?"))
+			-- port = tonumber(askQuestion("On what port?"))
+			port = 239
 			isHosting = true
 			UDP:setsockname("localhost", port)
 		else
-			ip = askQuestion("What's the ip?")
-			port = tonumber(askQuestion("What's the port?"))
+			-- ip = askQuestion("What's the ip?")
+			-- port = tonumber(askQuestion("What's the port?"))
+			ip = "localhost"
+			port = 239
 			RegularPrint(ip, port)
 			UDP:setpeername(ip, port)
 		end

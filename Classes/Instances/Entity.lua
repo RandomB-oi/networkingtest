@@ -1,7 +1,7 @@
 local module = {}
 module.__index = module
 module.__type = "Entity"
-module.Derives = "Classes.Object"
+module.Derives = "Classes.Instances.Object"
 
 module.new = function(self)
     self.Position = Vector.new(0, 0)
