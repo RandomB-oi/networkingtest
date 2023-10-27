@@ -40,14 +40,13 @@ module.Start = function()
             local playerId = newData.id
             local player = module.Get(playerId)
             if not player then
-                player = Instance.new("Player", localPlayer.Scene)
-                player.ID = playerId
+                player = Instance.new("Player", localPlayer.Scene, nil, playerId)
             end
 
-            player.Position.X = newData.pos.x
-            player.Position.Y = newData.pos.y
-            player.Size.X = newData.size.x
-            player.Size.Y = newData.size.y
+            player.Position.X = newData.pos[1]
+            player.Position.Y = newData.pos[2]
+            player.Size.X = newData.size[1]
+            player.Size.Y = newData.size[2]
         end
     end)
 end

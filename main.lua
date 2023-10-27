@@ -52,14 +52,14 @@ love.load = function()
 	ServerCreated:Connect(function(multiplayer, hosting, port, address)
 		if multiplayer then
 			UDP = socket.udp()
-			UDP:settimeout(0)
 			
 			if hosting then
 				isHosting = true
-				UDP:setsockname("localhost", port)
+				UDP:setsockname("*", port)
 			else
 				UDP:setpeername(address, port)
 			end
+			UDP:settimeout(0)
 		end
 	end)
 
@@ -67,7 +67,7 @@ love.load = function()
 		if not networkDataToSend then
 			networkDataToSend = {}
 		end
-		table.insert(networkDataToSend, getStr({jobName = jobName, data = newData}))
+		table.insert(networkDataToSend, {jobName = jobName, data = newData})
 	end)
 
 
@@ -103,22 +103,26 @@ love.load = function()
 			end
 		end)
 
-		if networkDataToSend and UDP then
+		if UDP then
 			if isHosting then
-				local data, msgOrIp, portOrNil = UDP:recievefrom()
+				local data, msgOrIp, portOrNil = UDP:receivefrom()
 				if data then
 					local dataToSend = getValue(data)
 					for i,v in ipairs(dataToSend) do
 						NetworkDataRecieved:Fire(v.jobName, v.data)
 					end
 
-					UDP:sendto(getStr(networkDataToSend))
+					if networkDataToSend then
+						UDP:sendto("return "..getStr(networkDataToSend, nil, nil, true), msgOrIp, portOrNil)
+					end
 				end
 			else
-				UDP:send(getStr(networkDataToSend))
+				if networkDataToSend then
+					UDP:send("return "..getStr(networkDataToSend, nil, nil, true))
+				end
 
 				local data = UDP:receive()
-					if data then
+				if data then
 					local dataToSend = getValue(data)
 					for i,v in ipairs(dataToSend) do
 						NetworkDataRecieved:Fire(v.jobName, v.data)

@@ -8,7 +8,7 @@ local val = playerData:IncrementAsync(key)
 print(val)
 ]]
 
-function getStr(value, alreadyDoneTables, tabs)
+function getStr(value, alreadyDoneTables, tabs, oneLine)
 	tabs = tabs or 0
 	if type(value) == "string" then
 		return "\""..value.."\""
@@ -19,25 +19,32 @@ function getStr(value, alreadyDoneTables, tabs)
 		end
 		alreadyDoneTables[value] = true
 		
-		return tableToString(value, alreadyDoneTables, tabs+1)
+		return tableToString(value, alreadyDoneTables, tabs+1, oneLine)
 	else
 		return tostring(value)
 	end
 end
 
-function tableToString(tbl, alreadyDoneTables, tabs)
+function tableToString(tbl, alreadyDoneTables, tabs, oneLine)
 	local alreadyDoneTables = alreadyDoneTables or {}
 	if not next(tbl) then
 		return "{}"
 	end
 	local str = "{\n"
 	for index, value in pairs(tbl) do
-		local indexString = string.rep("    ", tabs).."["..getStr(index, alreadyDoneTables).."]"
-		local valueString = getStr(value, alreadyDoneTables, tabs)
+		local indexString = string.rep("    ", tabs).."["..getStr(index, alreadyDoneTables, nil, oneLine).."]"
+		local valueString = getStr(value, alreadyDoneTables, tabs, oneLine)
 		
 		str = str..indexString.." = "..valueString..",\n"
 	end
 	str = str..string.rep("    ", tabs-1).."}"
+	if oneLine then
+str = str:gsub([[
+
+]], "")
+		
+		str = str:gsub("    ", "")
+	end
 	return str
 end
 

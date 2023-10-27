@@ -15,7 +15,7 @@ end
 
 module.All = {}
 
-module.new = function(scene, name)
+module.new = function(scene, name, id)
 	local self = setmetatable({}, module)
 	self.Maid = Instance.new("Maid")
 	
@@ -27,7 +27,7 @@ module.new = function(scene, name)
 	self.Scene = scene
 	self.Name = name or "Instance"
 	
-	self.ID = GenerateGUID()
+	self.ID = id or GenerateGUID()
     module.All[self.ID] = self
     self.Maid:GiveTask(function()
         module.All[self.ID] = nil
@@ -86,6 +86,9 @@ function module:Destroy()
 	self.Maid:Destroy()
 end
 
+function module.Get(id)
+	return module.All[id]
+end
 
 function module:__tostring()
     return self.__type.." "..self.ID
