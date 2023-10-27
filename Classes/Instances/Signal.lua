@@ -3,7 +3,7 @@ module.__index = module
 module.__type = "signal"
 	
 module.new = function()
-	return setmetatable({}, module)
+	return setmetatable({connections = {}}, module)
 end
 
 function module:Connect(callback, order)
@@ -11,11 +11,15 @@ function module:Connect(callback, order)
 		Order = order or 10,
 		_callback = callback,
 		Disconnect = function(connection)
----@diagnostic disable-next-line: undefined-field
-			table.remove(self, table.find(self, connection))
+			for i,v in ipairs(self.connections) do
+				if v == connection then
+					table.remove(self.connections, i)
+					break
+				end
+			end
 		end,
 	}
-	table.insert(self, connection)
+	table.insert(self.connections, connection)
 	return connection
 end
 
@@ -50,7 +54,7 @@ function module:Fire(...)
 	if doOrderedSignals then
 		local s,e = pcall(function()
 			local orderedConnections = {}
-			for _, connection in pairs(self) do
+			for _, connection in pairs(self.connections) do
 				if type(connection) == "table" then
 					local order = connection.Order or unknownOrder
 					if not orderedConnections[order] then
@@ -71,25 +75,25 @@ function module:Fire(...)
 			for i,v in ipairs(orderList) do
 				local list = orderedConnections[v]
 				for connectionIndex, connection in ipairs(list) do
-					coroutine.wrap(connection._callback)(unpack(args))
+					xpcall(coroutine.wrap(connection._callback), function(err)
+						print(err, debug.traceback())
+					end, unpack(args))
 				end
 			end
 		end)
 	else
-		for _, connection in pairs(self) do
+		for _, connection in pairs(self.connections) do
 			if type(connection) == "table" then
-				coroutine.wrap(connection._callback)(...)
+				xpcall(coroutine.wrap(connection._callback), function(err)
+					print(err, debug.traceback())
+				end, unpack(args))
 			end
 		end
 	end
 end
 
-function module:destroy()
-	local index, task = next(self)
-	while index and task ~= nil do
-		task:disconnect()
-		index, task = next(self)
-	end
+function module:Destroy()
+	self.connections = {}
 end
 
 module.Init = function()
