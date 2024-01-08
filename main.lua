@@ -55,7 +55,7 @@ love.load = function()
 			
 			if hosting then
 				isHosting = true
-				UDP:setsockname("*", port)
+				UDP:setsockname("localhost", port)
 			else
 				UDP:setpeername(address, port)
 			end
