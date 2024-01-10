@@ -26,6 +26,9 @@ Vector = Classes.Vector
 Color = Classes.Color
 UDim = Classes.UDim
 UDim2 = Classes.UDim2
+NumberRange = Classes.NumberRange
+ColorSequence = Classes.ColorSequence
+NumberSequence = Classes.NumberSequence
 
 LoveUpdate = Instance.new("Signal")
 LoveDraw = Instance.new("Signal")
@@ -51,15 +54,20 @@ love.load = function()
 	local networkDataToSend, UDP
 	ServerCreated:Connect(function(multiplayer, hosting, port, address)
 		if multiplayer then
+			print("Playing multiplayer")
 			UDP = socket.udp()
 			
 			if hosting then
 				isHosting = true
+				print("Hosting on port "..tostring(port))
 				UDP:setsockname("localhost", port)
 			else
+				print("Joining ip "..tostring(address).." on port "..tostring(port))
 				UDP:setpeername(address, port)
 			end
 			UDP:settimeout(0)
+		else
+			print("Playing singleplayer")
 		end
 	end)
 
@@ -87,21 +95,12 @@ love.load = function()
 	-- 		self.Draw:Fire()
 	-- 	end
 	-- end))
-
-	local function ForEachScene(callback)
-		for _, scene in pairs(Instance.GetClass("Scene").All) do
-			callback(scene)
-		end
-	end
-
-	love.update = function(dt)
-		LoveUpdate:Fire(dt)
-
-		ForEachScene(function(scene)
-			if scene.Enabled and not scene.IsPaused then
-				scene.Update:Fire(dt)
-			end
-		end)
+	local networkTPS = 1/200
+	local lastNetworkTick = -math.huge
+	local function DoNetworking()
+		local t = os.clock()
+		if t - lastNetworkTick < networkTPS then return end
+		lastNetworkTick = t
 
 		if UDP then
 			if isHosting then
@@ -131,6 +130,24 @@ love.load = function()
 			end
 			networkDataToSend = nil
 		end
+	end
+
+	local function ForEachScene(callback)
+		for _, scene in pairs(Instance.GetClass("Scene").All) do
+			callback(scene)
+		end
+	end
+
+	love.update = function(dt)
+		LoveUpdate:Fire(dt)
+
+		ForEachScene(function(scene)
+			if scene.Enabled and not scene.IsPaused then
+				scene.Update:Fire(dt)
+			end
+		end)
+		
+		DoNetworking()
 	end
 
 	love.draw = function()

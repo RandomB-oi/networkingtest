@@ -3,14 +3,10 @@ module.__index = module
 module.__type = "InstanceBase"
 
 local function removeFromChildren(parent, self)
-	table.remove(self._oldParent.children, table.find(self._oldParent.children, self))
-end
-
-local GenerateGUID = function()
-	math.randomseed(os.clock() + os.time())
-	local length = 8
-	local id = tostring(math.random(0, 10^8))
-	return id .. string.rep("0", length - id:len())
+	local foundIndex = table.find(self._oldParent.children, self)
+	if foundIndex then
+		table.remove(self._oldParent.children, foundIndex)
+	end
 end
 
 module.All = {}
@@ -84,6 +80,10 @@ end
 function module:Destroy()
 	self.Destroying:Fire()
 	self.Maid:Destroy()
+
+	for _, child in pairs(self.Children) do
+		child:Destroy()
+	end
 end
 
 function module.Get(id)
