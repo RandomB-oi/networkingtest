@@ -38,10 +38,34 @@ GuiInputEnded = Instance.new("Signal")
 InputBegan = Instance.new("Signal")
 InputEnded = Instance.new("Signal")
 
+OutputMessage = Instance.new("Signal")
+
 NetworkDataRecieved = Instance.new("Signal")
 NetworkDataSend = Instance.new("Signal")
 local isHosting
 local ip, port
+
+do
+	local function cleanArgs(...)
+		local args = {...}
+		for i, v in pairs(args) do
+			if type(v) ~= "string" then
+				args[i] = tostring(v)
+			end
+		end
+		return unpack(args)
+	end
+	function print(...)
+		OutputMessage:Fire("p", cleanArgs(...))
+	end
+	function warn(...)
+		OutputMessage:Fire("w", cleanArgs(...))
+	end
+	function error(...)
+		local traceback = debug.traceback()
+		OutputMessage:Fire("e", cleanArgs(..., traceback))
+	end
+end
 
 ClassUtil.RecurseStart(Utilities, _utilitiesOrder)
 ClassUtil.RecurseStart(Classes, _classOrder)
@@ -163,6 +187,10 @@ love.load = function()
 				scene.Draw:Fire()
 			end
 		end)
+	end
+
+	love.mouse.getVector = function()
+		return Vector.new(love.mouse.getPosition())
 	end
 
 	love.keypressed = function(key)

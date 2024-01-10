@@ -26,7 +26,7 @@ module.new = function(scene, id)
     ---------------------------------------
     
     self.Particles = {}
-    self.LastEmit = -math.huge
+    self.LastEmit = 0
 
 	self.ID = id or GenerateGUID()
     module.All[self.ID] = self
@@ -60,9 +60,12 @@ end
 
 function module:StepParticles(dt)
     local t = os.clock()
-    if self.Enabled and t - self.LastEmit > 1/self.Rate then
+    local timeDiff = t-self.LastEmit
+    local emitRate = 1/self.Rate
+    if self.Enabled and timeDiff > emitRate then
         self.LastEmit = t
-        self:Emit()
+        local amt = math.round(timeDiff/emitRate)
+        self:Emit(amt)
     end
     for i = #self.Particles, 1, -1 do
         local particle = self.Particles[i]

@@ -13,7 +13,7 @@ module.Init = function()
 
     local emitter = Instance.new("ParticleEmitter", module.Scene)
     emitter.Rate = 50
-    emitter.Enabled = true
+    emitter.Enabled = false
 
     emitter.ParticleSize = NumberSequence.new({{0,0}, {0.1,25}, {0.25, 20}, {.5,15}, {1,0}})
     emitter.Color = ColorSequence.new({
@@ -25,9 +25,15 @@ module.Init = function()
     emitter.Speed = NumberRange.new(20, 50)
     emitter.EmissionAngleRange = NumberRange.new(0, 360)
 
-    emitter.Size = Vector.new(40, 25)
+    emitter.Size = Vector.new(25, 25)
     emitter.Position = Vector.new(200, 200)
 
+    localPlayer.Tools[1].Activated:Connect(function()
+        emitter:Emit(50)
+    end)
+    module.Scene.Update:Connect(function()
+        emitter.Position = love.mouse.getVector()
+    end)
     -- local lastEmit = -math.huge
     -- module.Scene.Update:Connect(function()
     --     local t = os.clock()
