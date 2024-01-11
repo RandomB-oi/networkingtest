@@ -1,6 +1,6 @@
 local module = {}
 module.__index = module
-module.__type = "color"
+module.__type = "Color"
 
 module.new = function(r,g,b, a)
 	return setmetatable({

@@ -64,6 +64,9 @@ module.Init = function()
     end))
 
     module.Scene.Maid:GiveTask(OutputMessage:Connect(function(outputType, ...)
+        local newStr = table.concat({...}, " ")
+        if newStr == "" then return end
+
         local textColor
         if outputType == "e" then
             textColor = Color.From255(255, 25, 25)
@@ -79,8 +82,6 @@ module.Init = function()
             resetOutput()
             outputSerial = 1
         end
-
-        local newStr = table.concat({...}, " ")
         local messages = string.split(newStr, "\n")
 
         if #messages > 1 then

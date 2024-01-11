@@ -11,7 +11,6 @@ module.new = function(scene, id)
     self.ID = id or GenerateGUID()
     self.IsEquipped = false
     self.Scene = scene
-    print(self.ID)
 
     self.Activated = Instance.new("Signal")
     self.Equipped = Instance.new("Signal")
@@ -22,15 +21,12 @@ module.new = function(scene, id)
     self.Maid:GiveTask(self.Unequipped)
 
     self.Activated:Connect(function()
-        print("Activated")
     end)
     self.Equipped:Connect(function()
         self.IsEquipped = true
-        print("Equipped")
     end)
     self.Unequipped:Connect(function()
         self.IsEquipped = false
-        print("Unequipped")
     end)
 
     self.Maid.MainInput = self.Scene.InputBegan:Connect(function(key, isMouse)

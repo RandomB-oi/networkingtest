@@ -1,6 +1,6 @@
 local module = {}
 module.__index = module
-module.__type = "numberSequence"
+module.__type = "NumberSequence"
 
 module.new = function(numbers)
 	return setmetatable({

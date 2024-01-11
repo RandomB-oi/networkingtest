@@ -1,6 +1,6 @@
 local module = {}
 module.__index = module
-module.__type = "colorSequence"
+module.__type = "ColorSequence"
 
 module.new = function(colors)
     if not colors then

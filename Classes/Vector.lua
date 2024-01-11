@@ -1,5 +1,5 @@
 local module = {}
-module.__type = "vector2"
+module.__type = "Vector"
 module.__index = function(self,i)
 	return ClassUtil.Basic__index(module, self, i, {
 		Magnitude = function(self)

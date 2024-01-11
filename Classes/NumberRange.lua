@@ -1,6 +1,6 @@
 local module = {}
 module.__index = module
-module.__type = "numberRange"
+module.__type = "NumberRange"
 
 module.new = function(min, max, resolution)
 	return setmetatable({

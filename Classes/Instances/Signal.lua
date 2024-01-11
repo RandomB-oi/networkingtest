@@ -76,7 +76,7 @@ function module:Fire(...)
 				local list = orderedConnections[v]
 				for connectionIndex, connection in ipairs(list) do
 					xpcall(coroutine.wrap(connection._callback), function(err)
-						print(err, debug.traceback())
+						warn(err, debug.traceback())
 					end, unpack(args))
 				end
 			end
@@ -85,7 +85,7 @@ function module:Fire(...)
 		for _, connection in pairs(self.connections) do
 			if type(connection) == "table" then
 				xpcall(coroutine.wrap(connection._callback), function(err)
-					print(err, debug.traceback())
+					warn(err, debug.traceback())
 				end, unpack(args))
 			end
 		end

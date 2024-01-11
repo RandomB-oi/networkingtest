@@ -30,7 +30,7 @@ module.Init = function()
             newButton.Parent = buttonParent
             
             newButton.Clicked:Connect(function()
-                xpcall(callback, print)
+                xpcall(callback, warn)
                 if deleteAfterClick then
                     buttonParent:Destroy()
                 end
@@ -149,7 +149,9 @@ module.Start = function()
 
     playButton.Clicked:Connect(function()
         menu:Destroy()
-        ServerCreated:Fire(multiplayerCheckbox.Value, hostingCheckbox.Value, portBox.CurrentText, addressBox.CurrentText)
+        -- ServerCreated:Fire(multiplayerCheckbox.Value, hostingCheckbox.Value, portBox.CurrentText, addressBox.CurrentText)
+        
+        ServerCreated:Fire(multiplayerCheckbox.Value, hostingCheckbox.Value, "8", "localhost")
     end)
 
     -- local textbox = Instance.new("TextBox", module.Scene)

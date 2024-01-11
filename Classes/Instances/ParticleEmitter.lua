@@ -21,7 +21,7 @@ module.new = function(scene, id)
     self.Speed = NumberRange.new(20, 100)
     self.EmissionAngleRange = NumberRange.new(0, 0)
 
-    self.Size = Vector.new(100, 100)
+    self.Size = Vector.new(25, 25)
     self.Position = Vector.new(0, 0)
     ---------------------------------------
     
@@ -42,6 +42,23 @@ module.new = function(scene, id)
 	end))
 	
 	return self
+end
+
+function module:Replicate(prop, ...)
+    local args = {...}
+    for i, arg in pairs(args) do
+        args[i] = Serialize(arg)
+    end
+    local isFunction = not not module[prop]
+
+    NetworkDataSend:Fire("updParticle", {
+        id = self.ID,
+        name = prop,
+        -- serialize all the args too
+        val = isFunction and args or Serialize(self[prop]),
+        isF = isFunction,
+        sceneName = self.Scene.Name
+    })
 end
 
 function module:Emit(amount)
@@ -106,6 +123,24 @@ end
 
 module.Init = function()
 	Instance.AddClass(module.__type, module)
+end
+
+module.Start = function()
+    NetworkDataRecieved:Connect(function(job, info)
+        if job == "updParticle" then
+            local emitter = module.Get(info.id) or module.new(Instance.new("Scene", info.sceneName), info.id)
+
+            if info.isF then
+                local deserializedParams = {}
+                for i, v in pairs(info.val) do
+                    deserializedParams[i] = Deserialize(v)
+                end
+                emitter[info.name](emitter, unpack(deserializedParams))
+            else
+                emitter[info.name] = Deserialize(info.val)
+            end
+        end
+    end)
 end
 
 return module

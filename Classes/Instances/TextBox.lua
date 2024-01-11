@@ -32,7 +32,6 @@ module.new = function(self)
 	self.Clicked:Connect(function()
         self.Scene.Maid.TextboxInputBegan = self.Scene.GuiInputBegan:Connect(function(key, isMouse)
             if isMouse and key == 1 and not self:IsHovering() then
-                print("release datt focus")
                 self:ReleaseFocus()
                 return
             end
@@ -45,6 +44,8 @@ module.new = function(self)
                 self:SetText(self.CurrentText:sub(1, self.CurrentText:len()-1))
             elseif key == "lctrl" or key == "rctrl" or key == "lshift" or key == "rshift" then
 
+            elseif key == "space" then
+                self:SetText(self.CurrentText.." ")
             else
                 if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
                     key = upperReplace[key] or key:upper()

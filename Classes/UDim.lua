@@ -1,6 +1,6 @@
 local module = {}
 module.__index = module
-module.type = "udim"
+module.type = "UDim"
 
 module.new = function(scale, offset)
 	return setmetatable({
