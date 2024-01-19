@@ -148,6 +148,7 @@ love.load = function()
 			else
 				print("Joining ip "..tostring(address).." on port "..tostring(port))
 				UDP:setpeername(address, port)
+				NetworkDataSend:Fire("newPlr")
 			end
 			UDP:settimeout(0)
 		else
