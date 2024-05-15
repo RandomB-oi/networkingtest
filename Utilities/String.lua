@@ -20,7 +20,7 @@ end
 local existingGUIDS = {}
 function GenerateGUID(length)
 	math.randomseed(os.clock() + os.time())
-	local length = length or 16
+	local length = length or 24
 	local id = tostring(math.random(0, 10^length))
 	id = id .. string.rep("0", length - id:len())
 

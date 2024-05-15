@@ -19,6 +19,7 @@ module.new = function(scene, player)
         if not isMouse then
             local keyNum = tonumber(key)
             if keyNum and self.Player.Tools[keyNum] then
+                print("EQUIP EQUIP EQUIP "..tostring(keyNum))
                 self.Player:EquipTool(keyNum)
             end
         end
@@ -34,15 +35,15 @@ end
 
 function module:UpdateFrames()
     for index = #self.ToolFrames, 1, -1 do
-        local toolFrame = self.ToolFrames[i]
-        if toolFrame and not self.Player.Tools[i] then
+        local toolFrame = self.ToolFrames[index]
+        if toolFrame and not self.Player.Tools[index] then
             toolFrame:Destroy()
         end
     end
 
     local frameSize = 75
 
-    for i, tool in ipairs(self.Player.Tools) do
+    for i, tool in pairs(self.Player.Tools) do
         if not self.ToolFrames[i] then
             local newFrame = Instance.new("ImageLabel", self.Scene)
             newFrame.Name = "ToolFrame"..tostring(i)

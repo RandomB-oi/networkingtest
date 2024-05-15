@@ -1,3 +1,5 @@
+love.graphics.setDefaultFilter("nearest", "nearest")
+
 RegularPrint = print
 
 typeof = function(value)
@@ -42,7 +44,6 @@ OutputMessage = Instance.new("Signal")
 
 NetworkDataRecieved = Instance.new("Signal")
 NetworkDataSend = Instance.new("Signal")
-local isHosting
 local ip, port
 
 do
@@ -136,21 +137,16 @@ love.load = function()
 
     ServerCreated = Instance.new("Signal")
 	local networkDataToSend, UDP
-	ServerCreated:Connect(function(multiplayer, hosting, port, address)
+	ServerCreated:Connect(function(multiplayer, port, address)
 		if multiplayer then
 			print("Playing multiplayer")
 			UDP = socket.udp()
-			
-			if hosting then
-				isHosting = true
-				print("Hosting on port "..tostring(port))
-				UDP:setsockname("localhost", port)
-			else
-				print("Joining ip "..tostring(address).." on port "..tostring(port))
-				UDP:setpeername(address, port)
-				NetworkDataSend:Fire("newPlr")
-			end
 			UDP:settimeout(0)
+			
+			print("Joining ip "..tostring(address).." on port "..tostring(port))
+			UDP:setpeername(address, port)
+			NetworkDataSend:Fire("newPlr")
+
 		else
 			print("Playing singleplayer")
 		end
@@ -170,44 +166,34 @@ love.load = function()
 		mainGameScene:Enable()
 		mainGameScene:Unpause()
 	end)
-	-- self.Maid:GiveTask(LoveUpdate:Connect(function(dt)
-	-- 	if self.Enabled and not self.IsPaused then
-	-- 		self.Update:Fire(dt)
-	-- 	end
-	-- end))
-	-- self.Maid:GiveTask(LoveDraw:Connect(function()
-	-- 	if self.Enabled then
-	-- 		self.Draw:Fire()
-	-- 	end
-	-- end))
-	local networkTPS = 1/200
+
+	local networkTPS = 1/10
 	local lastNetworkTick = -math.huge
 	local function DoNetworking()
-		local t = os.clock()
-		if t - lastNetworkTick < networkTPS then return end
-		lastNetworkTick = t
-
 		if UDP then
-			if isHosting then
-				local data, msgOrIp, portOrNil = UDP:receivefrom()
-				if data then
-					local dataToSend = getValue(data)
-					for i,v in ipairs(dataToSend) do
-						NetworkDataRecieved:Fire(v.jobName, v.data)
-					end
+			local t = os.clock()
+			if t - lastNetworkTick < networkTPS then return end
+			lastNetworkTick = t
 
-					if networkDataToSend then
-						UDP:sendto("return "..getStr(networkDataToSend, nil, nil, true), msgOrIp, portOrNil)
-					end
-				end
-			else
-				if networkDataToSend then
-					UDP:send("return "..getStr(networkDataToSend, nil, nil, true))
-				end
+			if networkDataToSend then
+				UDP:send("return "..getStr(networkDataToSend, nil, nil, true))
+			end
 
-				local data = UDP:receive()
-				if data then
-					local dataToSend = getValue(data)
+			local data = UDP:receive()
+			if data then
+				if data == "connected" then
+					print("CONNECTED TO SERVER WWWWWW")
+					return
+				elseif data == "gotData" then
+					print("the server got our data")
+					return
+				end
+				if data:sub(1, 6) ~= "return" then
+					data = "return "..data
+				end
+				print(data:sub(1, math.min(data:len(), 25)))
+				local dataToSend = getValue(data)
+				if dataToSend then
 					for i,v in ipairs(dataToSend) do
 						NetworkDataRecieved:Fire(v.jobName, v.data)
 					end
@@ -235,17 +221,26 @@ love.load = function()
 		DoNetworking()
 	end
 
+	local mainShader = love.graphics.newShader("Shaders/TestShader/Pixel.glsl", "Shaders/TestShader/Vertex.glsl")
+
 	love.draw = function()
+		love.graphics.setShader(mainShader)
+		mainShader:send("millis", love.timer.getTime())
+		mainShader:send("screenSize", {love.graphics.getDimensions()})
+		mainShader:send("saturation", 1)
 		LoveDraw:Fire()
 
 		ForEachScene(function(scene)
 			if scene.Enabled then
-				scene.GuiDraw:Fire()
+				scene.Draw:Fire()
 			end
 		end)
+		
+		-- love.graphics.setShader(nil) -- should shaders be applied to the gui?
+
 		ForEachScene(function(scene)
 			if scene.Enabled then
-				scene.Draw:Fire()
+				scene.GuiDraw:Fire()
 			end
 		end)
 	end

@@ -31,12 +31,11 @@ module.new = function(self)
         })
     end)
 
-    self.LightColor = Color.new(1,1,1,0.025)
     self.Maid.Draw = self.Scene.Draw:Connect(function(dt)
-        self.LightColor:Apply()
         local point = ReplicatedFlashlightPoints[self.ID]
         if point then
-            local rings = 25
+            local rings = 50
+            Color.new(1,1,1,0.025):Apply()
             for i = 1, rings do
                 love.graphics.circle("fill", point.X, point.Y, math.lerp(5, 200, i/rings))
             end

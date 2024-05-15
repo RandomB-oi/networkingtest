@@ -108,76 +108,35 @@ module.Start = function()
     multiplayerCheckboxFrame.Position = UDim2.new(0, 0, 0, 0)
     multiplayerCheckboxFrame.Parent = menu
 
-    local hostingCheckboxFrame, hostingCheckbox = newCheckbox("Hosting")
-    hostingCheckboxFrame.Position = UDim2.new(0, 0, 0, 50)
-    hostingCheckboxFrame.Active = false
-    hostingCheckboxFrame.Parent = menu
-
     local portFrame, portBox = newInputBox("Port")
-    portFrame.Position = UDim2.new(0, 0, 0, 100)
+    portFrame.Position = UDim2.new(0, 0, 0, 50)
     portFrame.Active = false
     portFrame.Parent = menu
 
     local addressFrame, addressBox = newInputBox("Address")
-    addressFrame.Position = UDim2.new(0, 0, 0, 150)
+    addressFrame.Position = UDim2.new(0, 0, 0, 100)
     addressFrame.Active = false
     addressFrame.Parent = menu
 
-    -- local portLabel = Instance.new("TextLabel", module.Scene)
-    -- portLabel.Size = UDim2.new(0.25, 0, 0, 50)
-    -- portLabel.Position = UDim2.new(0, 6, 0, 100)
-    -- portLabel.Parent = menu
-    -- portLabel:SetText("Hosting")
-    -- portLabel.Active = false
-
     multiplayerCheckbox.ValueChanged:Connect(function(newValue)
-        hostingCheckboxFrame.Active = newValue
         portFrame.Active = newValue
-        addressFrame.Active = newValue and not hostingCheckbox.Value
-    end)
-
-    hostingCheckbox.ValueChanged:Connect(function(newValue)
-        addressFrame.Active = not newValue
+        addressFrame.Active = newValue
     end)
 
     local playButton = Instance.new("TextFrame", module.Scene)
     playButton.Position = UDim2.new(0, 6, 1, -6)
     playButton.Size = UDim2.new(1, -12, 0.25, -6)
     playButton.AnchorPoint = Vector.new(0, 1)
-    playButton:SetText("Play")
+    playButton.BackgroundColor = Color.new(1,1,1, 1)
+    playButton:SetText("PLAY")
     playButton.Parent = menu
 
     playButton.Clicked:Connect(function()
         menu:Destroy()
-        -- ServerCreated:Fire(multiplayerCheckbox.Value, hostingCheckbox.Value, portBox.CurrentText, addressBox.CurrentText)
+        -- ServerCreated:Fire(multiplayerCheckbox.Value, portBox.CurrentText, addressBox.CurrentText)
         
-        ServerCreated:Fire(multiplayerCheckbox.Value, hostingCheckbox.Value, "8", "localhost")
+        ServerCreated:Fire(multiplayerCheckbox.Value, "8080", "localhost")
     end)
-
-    -- local textbox = Instance.new("TextBox", module.Scene)
-
-    -- multiplayerCheckbox
-    -- local multiplayerMenu = module.CreateMenu({
-    --     ["Host"] = function()
-    --         MultiplayerModeSelected:Fire("h")
-    --     end,
-    --     ["Join"] = function()
-    --         MultiplayerModeSelected:Fire("j")
-    --     end,
-    -- }, true)
-
-    -- multiplayerMenu.Active = false
-
-    -- local gameModeMenu = module.CreateMenu({
-    --     ["Singleplayer"] = function()
-    --         GameModeSelected:Fire("s")
-    --         multiplayerMenu:Destroy()
-    --     end,
-    --     ["Multiplayer"] = function()
-    --         GameModeSelected:Fire("m")
-    --         multiplayerMenu.Active = true
-    --     end,
-    -- }, true)
 end
 
 return module

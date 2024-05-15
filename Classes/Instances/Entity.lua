@@ -9,7 +9,7 @@ module.new = function(self)
 
     self.Maid.Draw = self.Scene.Draw:Connect(function()
         love.graphics.setColor(1,1,1,1)
-        love.graphics.rectangle("line", self.Position.X, self.Position.Y, self.Size.X, self.Size.Y)
+        love.graphics.rectangle("fill", self.Position.X, self.Position.Y, self.Size.X, self.Size.Y)
     end)
 end
 

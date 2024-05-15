@@ -17,8 +17,11 @@ module.Init = function()
 
     emitter.ParticleSize = NumberSequence.new({{0,0}, {0.1,25}, {0.25, 20}, {.5,15}, {1,0}})
     emitter.Color = ColorSequence.new({
-        {0, Color.new(1, 0, 0, 1)},
-        {1, Color.new(1, 1, .4, 1)},
+        -- {0, Color.new(1, 0, 0, 1)},
+        -- {1, Color.new(1, 1, .4, 1)},
+        
+        {0, Color.new(0, 1, 1, 1)},
+        {1, Color.new(0, 0, .6, 1)},
     })
 
     emitter.LifeTime = NumberRange.new(1, 3)
