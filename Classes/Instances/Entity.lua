@@ -8,7 +8,8 @@ module.new = function(self)
     self.Size = Vector.new(25, 25)
 
     self.Maid.Draw = self.Scene.Draw:Connect(function()
-        love.graphics.setColor(1,1,1,1)
+        -- love.graphics.setColor(1,1,1,1)
+        love.graphics.setColor(0.2,0.4,0.6,1)
         love.graphics.rectangle("fill", self.Position.X, self.Position.Y, self.Size.X, self.Size.Y)
     end)
 end
