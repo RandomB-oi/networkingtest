@@ -218,7 +218,7 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
     vec4 pixelColor = texcolor * color;
 
     float a = millis;
-    if (pixelColor.x == 1 && pixelColor.y == 1 && pixelColor.z == 1) {
+    if ((pixelColor.x == 0.2 && pixelColor.y == 0.4 && pixelColor.z == 0.6) || (pixelColor.x == 1 && pixelColor.y == 1 && pixelColor.z == 1)) {
         vec4 shaderColor = getShaderColor(screen_coords/screenSize);
         pixelColor = vec4(shaderColor.xyz, pixelColor.w);
     }

@@ -35,7 +35,8 @@ module.new = function(self)
         local point = ReplicatedFlashlightPoints[self.ID]
         if point then
             local rings = 50
-            Color.new(1,1,1,0.025):Apply()
+            -- Color.new(1,1,1,0.025):Apply()
+            Color.new(0.2,0.4,0.6,0.025):Apply()
             for i = 1, rings do
                 love.graphics.circle("fill", point.X, point.Y, math.lerp(5, 200, i/rings))
             end
