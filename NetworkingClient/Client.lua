@@ -1,66 +1,82 @@
 local module = {}
 module.__index = module
 
-local socket = require("socket")
+local ENet = require("enet")
 local NetworkSignalClass = require("NetworkingClient.NetworkSignal")
+local lualzw = require("NetworkingClient.lualzw")
 
-module.new = function(address, port)
+local Transformer = require("NetworkingClient.DataTransformer")
+
+module.new = function()
     local self = setmetatable({}, module)
+
+    self.IP = nil
+    self.Port = nil
+    self.ServerIdentity = nil
+    self.DataSeparator = "/-/"
+
+    self.Host = ENet.host_create()
+
+    self.NetworkTPS = -1--1/10
+    self.LastNetworkTick = -math.huge
+
+    self.DataRecived = NetworkSignalClass.new()
+
+    return self
+end
+
+function module:Join(address, port)
     print("Playing multiplayer")
     print("Joining ip "..tostring(address).." on port "..tostring(port))
 
     self.IP = address
     self.Port = port
-
-    self.NetworkTPS = 1/10
-    self.LastNetworkTick = -math.huge
-
-    self.UDP = socket.udp()
-    self.UDP:settimeout(0)
-    self.UDP:setpeername(address, port)
-
-    self.DataRecived = NetworkSignalClass.new()
-
-    self.DataToSend = {}
-
+    self.ServerIdentity = tostring(self.IP)..":"..tostring(self.Port)
+    self.Server = self.Host:connect(self.ServerIdentity)
     self:Send("newClient")
-
-    return self
 end
 
-function module:Send(message, parameters)
-    table.insert(self.DataToSend, {job = message, data = parameters})
+function module:Send(jobName, jobData)
+    local data = {n=jobName, d=jobData}
+    local message = Transformer.Save(data)
+    local compressed = "cmp"..lualzw.compress(message)
+
+    self.Host:service(100)
+	self.Server:send(compressed)
+end
+
+function module:SendMessage(message)
+    self.Host:service(100)
+	self.Server:send(message)
 end
 
 function module:Tick()
+    if not self.Server then return end
     local t = os.clock()
-    if t - lastNetworkTick < self.NetworkTPS then return end
-    lastNetworkTick = t
+    if t - self.LastNetworkTick < self.NetworkTPS then return end
+    self.LastNetworkTick = t
 
-    for i = #self.DataToSend, 1, -1 do
-        local message = "return "..getStr(self.DataToSend[i], nil, nil, true)
-        local compressedMessage = "cmp"..lualzw.compress(message)
-        self.UDP:send(compressedMessage)
-    end
-    self.DataToSend = {}
+    local event = self.Host:service(100)
+    while event do
+        if event.type == "receive" then
+            local message = event.data
+            if message:sub(1,3) == "cmp" then
+                message = message:sub(4,-1)
+                message = lualzw.decompress(message)
+                message = Transformer.Load(message)
+                self.DataRecived:Fire(message.n, message.d)
+            else
+                self.DataRecived:Fire("unknown", message)
+            end
 
-    local data = self.UDP:receive()
-    if data then
-        if data:sub(1,3) == "cmp" then
-            data = lualzw.decompress(data:sub(4,-1))
+        elseif event.type == "connect" then
+            print(event.peer, "connected.")
+        elseif event.type == "disconnect" then
+            print(event.peer, "disconnected.")
+            love.event.quit()
         end
-        if data == "connected" then
-            print("CONNECTED TO SERVER WWWWWW")
-            return
-        elseif data == "gotData" then
-            -- print("the server got our data")
-            return
-        end
-
-        if data:sub(1, 6) ~= "return" then
-            data = "return "..data
-        end
-        local dataToSend = getValue(data)
-        self.DataRecived:Fire(dataToSend.job, dataToSend.data)
+        event = self.Host:service()
     end
 end
+
+return module

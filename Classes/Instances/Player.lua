@@ -88,10 +88,13 @@ end
 module.Start = function()
     NetworkClient.DataRecived:Connect(function(jobName, newData)
         if jobName == "plrData" then
+            if not (localPlayer and localPlayer.Scene) then print("cant make player, ours doesnt exist") return end
+            
             local playerId = newData.id
             local player = module.Get(playerId)
             if not player then
                 player = Instance.new("Player", localPlayer.Scene, nil, playerId)
+                print("create it boiiiii")
             end
 
             player.Position.X = newData.pos[1]

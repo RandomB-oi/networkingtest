@@ -209,7 +209,7 @@ vec4 getShaderColor(vec2 fragCoord) {
 }
 
 bool matchesFlashlightColor(vec4 color) {
-    return (pixelColor.x == .2 && pixelColor.y == .4 && pixelColor.z == .6);
+    return (color.x == 0.2 && color.y == 0.4 && color.z == 0.6);
 }
 
 

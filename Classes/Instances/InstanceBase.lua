@@ -98,14 +98,14 @@ end
 function module:Replicate(prop, ...)
 	if not NetworkClient then return end
 	local propValue, isFunction
-	if type(modHas) == "self[prop]" then
+	if type(self[prop]) == "function" then
 		local values = {...}
 		propValue = {}
 		for i, arg in pairs(values) do
-			propValue[i] = Serialize(arg)
+			propValue[i] = Serializer.Encode(arg)
 		end
 	else
-		propValue = Serialize(self[prop])
+		propValue = Serializer.Encode(self[prop])
 	end
 
     NetworkClient:Send("updIns", {
@@ -133,11 +133,11 @@ module.Start = function()
             if info.f then
                 local deserializedParams = {}
                 for i, v in pairs(info.v) do
-                    deserializedParams[i] = Deserialize(v)
+                    deserializedParams[i] = Serializer.Decode(v)
                 end
                 emitter[info.p](emitter, unpack(deserializedParams))
             else
-                emitter[info.p] = Deserialize(info.val)
+                emitter[info.p] = Serializer.Decode(info.val)
             end
         end
     end)

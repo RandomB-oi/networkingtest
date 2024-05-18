@@ -10,13 +10,14 @@ typeof = function(value)
 	return t
 end
 
-lualzw = require("Utilities.lualzw")
 local NetworkClientClass = require("NetworkingClient.Client")
+NetworkClient = NetworkClientClass.new()
 
 ClassUtil = require("Utilities.ClassUtil")
 string = require("Utilities.String")
 math = require("Utilities.Math")
 table = require("Utilities.Table")
+Serializer = require("Utilities.Serializer")
 Instance = require("Utilities.Instance")
 Utilities, _utilitiesOrder = ClassUtil.RecurseRequire("Utilities")
 ClassUtil.RecurseInit(Utilities, _utilitiesOrder)
@@ -66,64 +67,6 @@ do
 	end
 end
 
-function Serialize(value)
-	local t = typeof(value)
-	local serialized = {
-		t = t,
-		v = nil
-	}
-	xpcall(function()
-		if t == "Vector" then
-			serialized.v = {value.X, value.Y}
-		elseif t == "Color" then
-			serialized.v = {value.R, value.G, value.B, value.A}
-		elseif t == "UDim2" then
-			serialized.v = {value.X.Scale, value.X.Offset, value.Y.Scale, value.Y.Offset}
-		elseif t == "UDim" then
-			serialized.v = {value.Scale, value.Offset}
-		elseif t == "NumberRange" then
-			serialized.v = {value.Min, value.Max, value.Resolution}
-		elseif t == "NumberSequence" then
-			serialized.v = value.Numbers
-		elseif t == "ColorSequence" then
-			serialized.v = {}
-			for index, colorValue in pairs(value.Colors) do
-				serialized.v[index] = {colorValue[1], Serialize(colorValue[2])}
-			end
-		else
-			serialized.v = value
-		end
-	end, warn)
-	return serialized
-end
-
-function Deserialize(value)
-	local t = value.t
-	local serialized = value.v
-
-	if t == "Vector" then
-		return Vector.new(serialized[1], serialized[2])
-	elseif t == "Color" then
-		return Color.new(serialized[1], serialized[2], serialized[3], serialized[4])
-	elseif t == "UDim2" then
-		return UDim2.new(serialized[1], serialized[2], serialized[3], serialized[4])
-	elseif t == "UDim" then
-		return UDim.new(serialized[1], serialized[2])
-	elseif t == "NumberRange" then
-		return NumberRange.new(serialized[1], serialized[2], serialized[3])
-	elseif t == "NumberSequence" then
-		return NumberSequence.new(serialized)
-	elseif t == "ColorSequence" then
-		local colors = {}
-		for i, v in pairs(serialized) do
-			colors[i] = {v[1], Deserialize(v[2])}
-		end
-		return ColorSequence.new(colors)
-	else
-		return serialized
-	end
-end
-
 ClassUtil.RecurseStart(Utilities, _utilitiesOrder)
 ClassUtil.RecurseStart(Classes, _classOrder)
 
@@ -133,7 +76,7 @@ love.load = function()
     ServerCreated = Instance.new("Signal")
 	ServerCreated:Connect(function(multiplayer, port, address)
 		if multiplayer then
-			NetworkClient = NetworkClientClass.new(address, port)
+			NetworkClient:Join(address, port)
 		else
 			print("Playing singleplayer")
 		end
@@ -168,17 +111,17 @@ love.load = function()
 		end)
 		
 		if NetworkClient then
-			NetworkClient:Tick()
+			coroutine.wrap(NetworkClient.Tick)(NetworkClient)
 		end
 	end
 
 	local mainShader = love.graphics.newShader("Shaders/TestShader/Pixel.glsl", "Shaders/TestShader/Vertex.glsl")
 
 	love.draw = function()
-		-- love.graphics.setShader(mainShader)
-		-- mainShader:send("millis", love.timer.getTime())
-		-- mainShader:send("screenSize", {love.graphics.getDimensions()})
-		-- mainShader:send("saturation", 1)
+		love.graphics.setShader(mainShader)
+		mainShader:send("millis", love.timer.getTime())
+		mainShader:send("screenSize", {love.graphics.getDimensions()})
+		mainShader:send("saturation", 1)
 		LoveDraw:Fire()
 
 		ForEachScene(function(scene)
