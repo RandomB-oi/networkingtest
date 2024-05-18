@@ -10,7 +10,9 @@ typeof = function(value)
 	return t
 end
 
-local socket = require("socket")
+lualzw = require("Utilities.lualzw")
+local NetworkClientClass = require("NetworkingClient.Client")
+
 ClassUtil = require("Utilities.ClassUtil")
 string = require("Utilities.String")
 math = require("Utilities.Math")
@@ -41,10 +43,6 @@ InputBegan = Instance.new("Signal")
 InputEnded = Instance.new("Signal")
 
 OutputMessage = Instance.new("Signal")
-
-NetworkDataRecieved = Instance.new("Signal")
-NetworkDataSend = Instance.new("Signal")
-local ip, port
 
 do
 	local function cleanArgs(...)
@@ -129,79 +127,30 @@ end
 ClassUtil.RecurseStart(Utilities, _utilitiesOrder)
 ClassUtil.RecurseStart(Classes, _classOrder)
 
-GameModeSelected = Instance.new("Signal")
-MultiplayerModeSelected = Instance.new("Signal")
-
 love.load = function()
 	love.window.setMode(800, 600, {resizable = true})
 
     ServerCreated = Instance.new("Signal")
-	local networkDataToSend, UDP
 	ServerCreated:Connect(function(multiplayer, port, address)
 		if multiplayer then
-			print("Playing multiplayer")
-			UDP = socket.udp()
-			UDP:settimeout(0)
-			
-			print("Joining ip "..tostring(address).." on port "..tostring(port))
-			UDP:setpeername(address, port)
-			NetworkDataSend:Fire("newPlr")
-
+			NetworkClient = NetworkClientClass.new(address, port)
 		else
 			print("Playing singleplayer")
 		end
 	end)
 
-	NetworkDataSend:Connect(function(jobName, newData)
-		if not networkDataToSend then
-			networkDataToSend = {}
-		end
-		table.insert(networkDataToSend, {jobName = jobName, data = newData})
-	end)
+
 
 
 	ServerCreated:Connect(function()
-		Instance.new("Scene", "Menu"):Destroy() -- .new on scene returns the scene if one exists with that name
+		Instance.new("Scene", "Menu"):Destroy()
+		
+		-- .new on scene returns the scene if one exists with that name
 		local mainGameScene = Instance.new("Scene", "MainGame")
 		mainGameScene:Enable()
 		mainGameScene:Unpause()
 	end)
 
-	local networkTPS = 1/10
-	local lastNetworkTick = -math.huge
-	local function DoNetworking()
-		if UDP then
-			local t = os.clock()
-			if t - lastNetworkTick < networkTPS then return end
-			lastNetworkTick = t
-
-			if networkDataToSend then
-				UDP:send("return "..getStr(networkDataToSend, nil, nil, true))
-			end
-
-			local data = UDP:receive()
-			if data then
-				if data == "connected" then
-					print("CONNECTED TO SERVER WWWWWW")
-					return
-				elseif data == "gotData" then
-					print("the server got our data")
-					return
-				end
-				if data:sub(1, 6) ~= "return" then
-					data = "return "..data
-				end
-				print(data:sub(1, math.min(data:len(), 25)))
-				local dataToSend = getValue(data)
-				if dataToSend then
-					for i,v in ipairs(dataToSend) do
-						NetworkDataRecieved:Fire(v.jobName, v.data)
-					end
-				end
-			end
-			networkDataToSend = nil
-		end
-	end
 
 	local function ForEachScene(callback)
 		for _, scene in pairs(Instance.GetClass("Scene").All) do
@@ -218,7 +167,9 @@ love.load = function()
 			end
 		end)
 		
-		DoNetworking()
+		if NetworkClient then
+			NetworkClient:Tick()
+		end
 	end
 
 	local mainShader = love.graphics.newShader("Shaders/TestShader/Pixel.glsl", "Shaders/TestShader/Vertex.glsl")

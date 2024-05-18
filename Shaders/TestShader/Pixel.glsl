@@ -208,6 +208,10 @@ vec4 getShaderColor(vec2 fragCoord) {
 	return lerpColor(darkColor, lightColor, n);
 }
 
+bool matchesFlashlightColor(vec4 color) {
+    return (pixelColor.x == .2 && pixelColor.y == .4 && pixelColor.z == .6);
+}
+
 
 
 
@@ -218,7 +222,7 @@ vec4 effect( vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords )
     vec4 pixelColor = texcolor * color;
 
     float a = millis;
-    if (pixelColor.x == 1 && pixelColor.y == 1 && pixelColor.z == 1) {
+    if (matchesFlashlightColor(pixelColor) == true) {
         vec4 shaderColor = getShaderColor(screen_coords/screenSize);
         pixelColor = vec4(shaderColor.xyz, pixelColor.w);
     }

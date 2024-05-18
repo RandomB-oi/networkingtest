@@ -94,8 +94,53 @@ function module:__tostring()
     return self.__type.." "..self.ID
 end
 
+
+function module:Replicate(prop, ...)
+	if not NetworkClient then return end
+	local propValue, isFunction
+	if type(modHas) == "self[prop]" then
+		local values = {...}
+		propValue = {}
+		for i, arg in pairs(values) do
+			propValue[i] = Serialize(arg)
+		end
+	else
+		propValue = Serialize(self[prop])
+	end
+
+    NetworkClient:Send("updIns", {
+		cn = self.__type,
+        id = self.ID,
+        sn = self.Scene.Name,
+
+        p = prop,
+        -- serialize all the args too
+        v = propValue,
+        F = isFunction,
+    })
+end
+
+
 module.Init = function()
 	Instance.AddClass(module.__type, module)
+end
+
+module.Start = function()
+	NetworkClient.DataRecived:Connect(function(job, info)
+        if job == "updIns" then
+            local emitter = module.Get(info.id) or module.new(Instance.new("Scene", info.sn), info.id)
+
+            if info.f then
+                local deserializedParams = {}
+                for i, v in pairs(info.v) do
+                    deserializedParams[i] = Deserialize(v)
+                end
+                emitter[info.p](emitter, unpack(deserializedParams))
+            else
+                emitter[info.p] = Deserialize(info.val)
+            end
+        end
+    end)
 end
 
 return module

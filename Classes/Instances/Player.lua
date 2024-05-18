@@ -2,7 +2,7 @@ local module = {}
 module.__index = module
 module.__type = "Player"
 module.Derives = "Classes/Instances/Entity"
-
+module.UniqueReplication = true
 
 module.new = function(self)
     local DefaultToolColor = Color.new(1,1,1,1)
@@ -37,18 +37,20 @@ module.new = function(self)
         self.Position.X = self.Position.X + xDir
         self.Position.Y = self.Position.Y + yDir
     
-        local equippedTool = self:GetEquippedTool()
-        local compressedEquippedTool = equippedTool and {
-            className = equippedTool.__type,
-            id = equippedTool.ID,
-        }
+        if NetworkClient then
+            local equippedTool = self:GetEquippedTool()
+            local compressedEquippedTool = equippedTool and {
+                className = equippedTool.__type,
+                id = equippedTool.ID,
+            }
 
-        NetworkDataSend:Fire("plrData", {
-            pos = {self.Position.X, self.Position.Y},
-            size = {self.Size.X, self.Size.Y},
-            id = self.ID,
-            equippedTool = compressedEquippedTool,
-        })
+            NetworkClient:Send("plrData", {
+                pos = {self.Position.X, self.Position.Y},
+                size = {self.Size.X, self.Size.Y},
+                id = self.ID,
+                equippedTool = compressedEquippedTool,
+            })
+        end
     end)
 end
 
@@ -84,7 +86,7 @@ module.Init = function()
 end
 
 module.Start = function()
-    NetworkDataRecieved:Connect(function(jobName, newData)
+    NetworkClient.DataRecived:Connect(function(jobName, newData)
         if jobName == "plrData" then
             local playerId = newData.id
             local player = module.Get(playerId)

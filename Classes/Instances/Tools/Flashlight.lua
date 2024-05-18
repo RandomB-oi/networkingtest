@@ -16,26 +16,31 @@ module.new = function(self)
         self.Maid.Replication = self.Scene.Update:Connect(function()
             local pos = {localPlayer.Position.X + localPlayer.Size.X/2, localPlayer.Position.Y + localPlayer.Size.Y/2}
             ReplicatedFlashlightPoints[self.ID] = Vector.new(pos[1], pos[2])
-            NetworkDataSend:Fire("flashlightPoint", {
-                pos = pos,
-                id = self.ID,
-            })
+            
+            if NetworkClient then
+                NetworkClient:Send("flashlightPoint", {
+                    pos = pos,
+                    id = self.ID,
+                })
+            end
         end)
     end)
     self.Unequipped:Connect(function()
         self.Maid.Replication = nil
         ReplicatedFlashlightPoints[self.ID] = nil
-        NetworkDataSend:Fire("flashlightPoint", {
-            pos = nil,
-            id = self.ID,
-        })
+        if NetworkClient then
+            NetworkClient:Send("flashlightPoint", {
+                pos = nil,
+                id = self.ID,
+            })
+        end
     end)
 
     self.Maid.Draw = self.Scene.Draw:Connect(function(dt)
         local point = ReplicatedFlashlightPoints[self.ID]
         if point then
             local rings = 50
-            Color.new(1,1,1,0.025):Apply()
+            Color.new(.2,.4,.6,0.025):Apply()
             for i = 1, rings do
                 love.graphics.circle("fill", point.X, point.Y, math.lerp(5, 200, i/rings))
             end
@@ -50,14 +55,10 @@ module.Init = function()
 end
 
 module.Start = function(args)
-    NetworkDataRecieved:Connect(function(jobName, newData)
+    NetworkClient.DataRecived:Connect(function(jobName, newData)
         if jobName == "flashlightPoint" then
             ReplicatedFlashlightPoints[newData.id] = newData.pos and Vector.new(newData.pos[1], newData.pos[2])
         end
-    end)
-
-    Draw:Connect(function(args)
-        
     end)
 end
 

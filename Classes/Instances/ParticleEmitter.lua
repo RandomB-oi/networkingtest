@@ -1,13 +1,10 @@
 local module = {}
 module.__index = module
 module.__type = "ParticleEmitter"
+module.Derives = "Classes/Instances/Entity"
 
-module.All = {}
-
-module.new = function(scene, id)
-	local self = setmetatable({}, module)
-	self.Maid = Instance.new("Maid")
-	self.Scene = scene
+module.new = function(self)
+	self.Maid.Draw = nil
 
     self.Enabled = true
     self.Rate = 20
@@ -28,37 +25,14 @@ module.new = function(scene, id)
     self.Particles = {}
     self.LastEmit = 0
 
-	self.ID = id or GenerateGUID()
-    module.All[self.ID] = self
-    self.Maid:GiveTask(function()
-        module.All[self.ID] = nil
-    end)
-	
-	self.Maid:GiveTask(scene.Update:Connect(function(dt)
+	self.Maid:GiveTask(self.Scene.Update:Connect(function(dt)
 		self:StepParticles(dt)
 	end))
-	self.Maid:GiveTask(scene.Draw:Connect(function()
+	self.Maid:GiveTask(self.Scene.Draw:Connect(function()
 		self:Draw()
 	end))
 	
 	return self
-end
-
-function module:Replicate(prop, ...)
-    local args = {...}
-    for i, arg in pairs(args) do
-        args[i] = Serialize(arg)
-    end
-    local isFunction = not not module[prop]
-
-    NetworkDataSend:Fire("updParticle", {
-        id = self.ID,
-        name = prop,
-        -- serialize all the args too
-        val = isFunction and args or Serialize(self[prop]),
-        isF = isFunction,
-        sceneName = self.Scene.Name
-    })
 end
 
 function module:Emit(amount)
@@ -126,21 +100,6 @@ module.Init = function()
 end
 
 module.Start = function()
-    NetworkDataRecieved:Connect(function(job, info)
-        if job == "updParticle" then
-            local emitter = module.Get(info.id) or module.new(Instance.new("Scene", info.sceneName), info.id)
-
-            if info.isF then
-                local deserializedParams = {}
-                for i, v in pairs(info.val) do
-                    deserializedParams[i] = Deserialize(v)
-                end
-                emitter[info.name](emitter, unpack(deserializedParams))
-            else
-                emitter[info.name] = Deserialize(info.val)
-            end
-        end
-    end)
 end
 
 return module
